@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { GlobalStyle } from './GlobalStyle';
 import { nanoid } from 'nanoid';
 import { Contacts } from './Contacts/Contacts';
@@ -8,74 +8,64 @@ import { Container } from './GlobalStyle';
 
 const storageKey = 'saveContacts';
 
-export class App extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+const itemContact = [
+  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+];
 
-  componentDidMount() {
-    const savedContacts = localStorage.getItem(storageKey);
-    if (savedContacts !== null) {
-      this.setState({
-        contacts: JSON.parse(savedContacts),
-      });
-    }
+const initContact = () => {
+  if (localStorage.getItem(storageKey)) {
+    return JSON.parse(localStorage.getItem(storageKey));
   }
+  return itemContact;
+};
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem(storageKey, JSON.stringify(this.state.contacts));
+export const App = () => {
+  const [contacts, setContacts] = useState(initContact);
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(contacts));
+  }, [contacts]);
+
+  const delContact = cont => {
+    setContacts(prevContacts => prevContacts.filter(e => e.id !== cont));
+  };
+
+  const addContact = newContact => {
+    const isExist = contacts.some(
+      ({ name, number }) =>
+        name.toLowerCase().trim() === newContact.name.toLowerCase().trim() ||
+        number.trim() === newContact.number.trim()
+    );
+
+    if (isExist) {
+      return alert(`${newContact.name}: is already in contacts`);
     }
-  }
 
-  addContact = cont => {
-    this.setState(prevState => {
-      cont.id = nanoid();
-      return {
-        contacts: [cont, ...prevState.contacts],
-      };
-    });
+    setContacts(contacts => [{ ...newContact, id: nanoid() }, ...contacts]);
   };
 
-  delContact = cont => {
-    this.setState(({ contacts }) => {
-      return {
-        contacts: contacts.filter(e => e.id !== cont),
-      };
-    });
+  const getFilter = value => {
+    setFilter(value.currentTarget.value.toLowerCase());
   };
 
-  getFilter = value => {
-    let name = value.currentTarget.value.toLowerCase();
-    this.setState({
-      filter: name,
-    });
-  };
-
-  filteredContacts = () => {
-    const { contacts, filter } = this.state;
-
+  const filteredContacts = () => {
     return contacts.filter(contact =>
       contact.name.toLowerCase().includes(filter.toLowerCase())
     );
   };
 
-  render() {
-    return (
-      <Container>
-        <h1>Phonebook</h1>
-        <NameInput addstate={this.addContact} state={this.state} />
-        <h2>Contacts</h2>
-        <Filter filter={this.getFilter} />
-        <Contacts contacts={this.filteredContacts()} delContact={this.delContact} />
-        <GlobalStyle />
-      </Container>
-    );
-  }
-}
+  return (
+    <Container>
+      <h1>Phonebook</h1>
+      <NameInput onAddContact={addContact} />
+      <h2>Contacts</h2>
+      <Filter filter={getFilter} />
+      <Contacts contacts={filteredContacts()} delContact={delContact} />
+      <GlobalStyle />
+    </Container>
+  );
+};

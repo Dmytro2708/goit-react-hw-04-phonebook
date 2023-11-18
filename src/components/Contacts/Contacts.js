@@ -1,6 +1,6 @@
 import { ContactsList, ContactEl } from './Contacts.styled';
 
-export function Contacts({ contacts, delContact }) {
+export const Contacts = ({ contacts, delContact }) => {
   return (
     <ContactsList>
       {contacts.map(e => (
