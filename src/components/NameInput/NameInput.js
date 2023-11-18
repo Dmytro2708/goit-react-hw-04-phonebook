@@ -7,30 +7,39 @@ const NameInputSchema = Yup.object().shape({
   number: Yup.number().required('Required'),
 });
 
-export const NameInput = ({ onAddContact }) => {
+export const NameInput = ({ addstate, state }) => {
   return (
     <Formik
       initialValues={{
         name: '',
         number: '',
       }}
+
       validationSchema={NameInputSchema}
-      onSubmit={(values, { resetForm }) => {
-        onAddContact({ ...values });
-        resetForm();
+      onSubmit={(values, actions) => {
+        let check = state.contacts.find(e => e.name === values.name);
+
+        if (check === undefined) {
+          actions.resetForm();
+
+          addstate(values);
+        } else {
+          alert(`"${values.name}" is alredy in contacts`);
+        }
+        actions.resetForm();
       }}
     >
       <StyledForm>
         <label>
           Name
           <Field type="text" name="name" placeholder="Name" />
-          <ErrorMessage name="name" />
+          <ErrorMessage name="name"/>
         </label>
 
         <label>
           Number
           <Field type="tel" name="number" placeholder="Number" />
-          <ErrorMessage name="number" />
+          <ErrorMessage name="number"/>
         </label>
         <button type="submit">Add contact</button>
       </StyledForm>
